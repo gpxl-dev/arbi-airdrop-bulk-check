@@ -10,7 +10,7 @@ import truncate from "truncate-eth-address";
 const getCheckUrl = (address: string) =>
   "https://corsproxy.io/?" +
   encodeURIComponent(
-    `https://arbitrum.foundation/_next/data/lB0zTjQwwi0nJOMcTT0Td/eligibility.json?address=${address.toLowerCase()}`
+    `https://arbitrum.foundation/_next/data/NDhqybgYBJYIbHFAh1PQB/eligibility.json?address=${address.toLowerCase()}`
   );
 
 type CheckResult = {
