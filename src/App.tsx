@@ -55,6 +55,7 @@ type eligibilityResponse = { pageProps: CheckResult };
 function App() {
   const [addresses, setAddresses] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
 
   const allAddresses = useMemo(() => {
     const matches = addresses.matchAll(/0x[a-z0-9]{40}/gim);
@@ -86,16 +87,23 @@ function App() {
   const fetchAirdropData = useCallback(
     (e: FormEvent<HTMLFormElement>) => {
       setLoading(true);
+      setError("");
+      setResult(null);
       e.preventDefault();
       const promises = allAddresses.map(async (address) => {
         const res = await fetch(getCheckUrl(address));
         const json = (await res.json()) as eligibilityResponse;
         return json.pageProps;
       });
-      Promise.all(promises).then((results) => {
-        setResult(results);
-        setLoading(false);
-      });
+      Promise.all(promises)
+        .then((results) => {
+          setResult(results);
+          setLoading(false);
+        })
+        .catch((e) => {
+          setError(e.message);
+          setLoading(false);
+        });
     },
     [allAddresses]
   );
@@ -130,6 +138,12 @@ function App() {
           )}
         </button>
       </form>
+      {error && (
+        <div className="flex w-[440px] flex-col gap-1">
+          <p className="font-bold text-slate-300">Eligibility check failed:</p>
+          <p className="text-slate-300">{error}</p>
+        </div>
+      )}
       {result && (
         <>
           <div className="grid grid-cols-2">
