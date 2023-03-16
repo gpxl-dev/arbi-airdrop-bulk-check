@@ -1,8 +1,11 @@
 import {
   FormEvent,
   FormEventHandler,
+  Fragment,
   useCallback,
+  useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
 import truncate from "truncate-eth-address";
@@ -57,6 +60,22 @@ function App() {
     return [...new Set(result.map((a) => a.toLowerCase()))];
   }, [addresses]);
 
+  const textArea = useRef<HTMLTextAreaElement>(null);
+
+  useEffect(() => {
+    const textAreaEl = textArea.current;
+    if (!textAreaEl) return;
+
+    // add paste listener
+    const pasteListener = (e: ClipboardEvent) => {
+      setTimeout(() => {
+        setAddresses(textAreaEl.value + "\n");
+      }, 0);
+    };
+
+    textAreaEl.addEventListener("paste", pasteListener);
+  }, []);
+
   const [result, setResult] = useState<CheckResult[] | null>(null);
 
   const fetchAirdropData = useCallback(
@@ -82,12 +101,13 @@ function App() {
       </h1>
       <form className="flex flex-col" onSubmit={fetchAirdropData}>
         <textarea
+          ref={textArea}
           cols={42}
           rows={10}
           value={addresses}
           onChange={(e) => setAddresses(e.target.value)}
           className="text-sky-100-100 rounded border border-sky-700 bg-sky-800 px-4 py-2 font-mono placeholder:text-slate-400"
-          placeholder="Enter addresses separated by commas, spaces, or carriage returns."
+          placeholder="Paste addresses separated by commas, spaces, or carriage returns."
         />
         <input
           type="submit"
@@ -97,35 +117,31 @@ function App() {
       </form>
       {result && (
         <>
-          <table>
-            <thead>
-              <tr>
-                <th className="text-left">Address</th>
-                {/* <th>Points</th> */}
-                <th className="text-right">Tokens</th>
-              </tr>
-            </thead>
-            <tbody>
-              {result.map((r: CheckResult, i) => (
-                <tr key={i}>
-                  <td className="font-mono">{truncate(allAddresses[i])}</td>
-                  {/* <td>{r.eligibility.points}</td> */}
-                  <td className="text-right">{r.eligibility.tokens}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-          {/* Table with headers in the first column: Total tokens, token price, market cap, FDV, airdrop value */}
-          <table>
-            <tbody>
-              <tr>
-                <th>Total tokens</th>
-                <td>
-                  {result?.reduce((acc, r) => acc + r.eligibility.tokens, 0)}
-                </td>
-              </tr>
-            </tbody>
-          </table>
+          <div className="grid grid-cols-2">
+            <div className="mb-4 text-left font-bold">Address</div>
+            {/* <th>Points</th> */}
+            <div className="text-right font-bold">Tokens</div>
+
+            {result.map((r: CheckResult, i) => (
+              <Fragment key={i}>
+                <div className="pr-10 font-mono">
+                  {truncate(allAddresses[i])}
+                </div>
+                {/* <td>{r.eligibility.points}</td> */}
+                <div className="text-right">
+                  {r.eligibility.tokens.toLocaleString()}
+                </div>
+              </Fragment>
+            ))}
+            {/* Table with headers in the first column: Total tokens, token price, market cap, FDV, airdrop value */}
+            <div className="col-span-2 mt-4 h-px bg-sky-800"></div>
+            <div className="mt-4 font-bold">Total tokens</div>
+            <div className="mt-4 text-right font-bold">
+              {result
+                ?.reduce((acc, r) => acc + r.eligibility.tokens, 0)
+                .toLocaleString()}
+            </div>
+          </div>
         </>
       )}
     </div>
