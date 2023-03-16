@@ -9,6 +9,7 @@ import {
   useState,
 } from "react";
 import truncate from "truncate-eth-address";
+import { BsEyeFill, BsEyeSlashFill } from "react-icons/bs";
 
 const getCheckUrl = (address: string) =>
   "https://corsproxy.io/?" +
@@ -78,6 +79,8 @@ function App() {
 
   const [result, setResult] = useState<CheckResult[] | null>(null);
 
+  const [blur, setBlur] = useState<boolean>(false);
+
   const fetchAirdropData = useCallback(
     (e: FormEvent<HTMLFormElement>) => {
       e.preventDefault();
@@ -118,13 +121,21 @@ function App() {
       {result && (
         <>
           <div className="grid grid-cols-2">
-            <div className="mb-4 text-left font-bold">Address</div>
+            <div className="mb-4 flex flex-row items-center gap-2 text-left font-bold">
+              Address
+              <button
+                onClick={() => setBlur((b) => !b)}
+                className="text-slate-400"
+              >
+                {blur ? <BsEyeFill /> : <BsEyeSlashFill />}
+              </button>
+            </div>
             {/* <th>Points</th> */}
             <div className="text-right font-bold">Tokens</div>
 
             {result.map((r: CheckResult, i) => (
               <Fragment key={i}>
-                <div className="pr-10 font-mono">
+                <div className={"pr-10 font-mono " + (blur ? "blur-sm" : "")}>
                   {truncate(allAddresses[i])}
                 </div>
                 {/* <td>{r.eligibility.points}</td> */}
