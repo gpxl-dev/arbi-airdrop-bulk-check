@@ -168,7 +168,7 @@ function App() {
         </>
       )}
       <div className="flex-1"></div>
-      <div className="mb-10 flex w-[440px] flex-col gap-2 text-sm">
+      <div className="mt-8 mb-10 flex w-[440px] flex-col gap-2 text-sm">
         <p>
           This site was hacked together quickly by{" "}
           <a
