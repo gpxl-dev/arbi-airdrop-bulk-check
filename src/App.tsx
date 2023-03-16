@@ -10,6 +10,7 @@ import {
 } from "react";
 import truncate from "truncate-eth-address";
 import { BsEyeFill, BsEyeSlashFill } from "react-icons/bs";
+import { ImSpinner10 } from "react-icons/im";
 
 const getCheckUrl = (address: string) =>
   "https://corsproxy.io/?" +
@@ -53,6 +54,7 @@ type eligibilityResponse = { pageProps: CheckResult };
 
 function App() {
   const [addresses, setAddresses] = useState<string>("");
+  const [loading, setLoading] = useState<boolean>(false);
 
   const allAddresses = useMemo(() => {
     const matches = addresses.matchAll(/0x[a-z0-9]{40}/gim);
@@ -83,6 +85,7 @@ function App() {
 
   const fetchAirdropData = useCallback(
     (e: FormEvent<HTMLFormElement>) => {
+      setLoading(true);
       e.preventDefault();
       const promises = allAddresses.map(async (address) => {
         const res = await fetch(getCheckUrl(address));
@@ -91,13 +94,14 @@ function App() {
       });
       Promise.all(promises).then((results) => {
         setResult(results);
+        setLoading(false);
       });
     },
     [allAddresses]
   );
 
   return (
-    <div className="flex flex-col items-center">
+    <div className="flex flex-1 flex-col items-center">
       <h1 className="mb-8 mt-8 text-2xl">
         Arbitrum airdrop bulk address checker
       </h1>
@@ -111,11 +115,20 @@ function App() {
           className="text-sky-100-100 rounded border border-sky-700 bg-sky-800 px-4 py-2 font-mono placeholder:text-slate-400"
           placeholder="Paste addresses separated by commas, spaces, or carriage returns."
         />
-        <input
+        <button
           type="submit"
-          value="Check Airdrop Eligibility"
+          disabled={loading}
           className="mt-4 mb-10 self-center rounded-sm bg-sky-800 py-1 px-3"
-        />
+        >
+          {loading ? (
+            <div className="flex flex-row items-center gap-2">
+              <span>Checking...</span>
+              <ImSpinner10 className="animate-spin" />
+            </div>
+          ) : (
+            "Check Airdrop Eligibility"
+          )}
+        </button>
       </form>
       {result && (
         <>
@@ -154,6 +167,19 @@ function App() {
           </div>
         </>
       )}
+      <div className="flex-1"></div>
+      <div className="mb-10 w-[440px] text-sm">
+        This site was hacked together quickly by{" "}
+        <a
+          href="https://twitter.com/greypixel_"
+          className="cursor-pointer underline"
+          target="_blank"
+        >
+          greypixel
+        </a>
+        . It will probably break frequently, I'll try fix as quickly as
+        possible.
+      </div>
     </div>
   );
 }
