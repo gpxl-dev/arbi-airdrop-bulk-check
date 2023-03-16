@@ -109,18 +109,18 @@ function App() {
   );
 
   return (
-    <div className="flex flex-1 flex-col items-center">
+    <div className="flex w-full flex-1 flex-col items-center px-4">
       <h1 className="mb-8 mt-8 text-2xl">
         Arbitrum airdrop bulk address checker
       </h1>
-      <form className="flex flex-col" onSubmit={fetchAirdropData}>
+      <form className="flex flex-col items-center" onSubmit={fetchAirdropData}>
         <textarea
           ref={textArea}
           cols={42}
           rows={10}
           value={addresses}
           onChange={(e) => setAddresses(e.target.value)}
-          className="text-sky-100-100 rounded border border-sky-700 bg-sky-800 px-4 py-2 font-mono placeholder:text-slate-400"
+          className="mx-2 max-w-full rounded border border-sky-700 bg-sky-800 px-4 py-2 font-mono text-xs placeholder:text-slate-400 sm:text-base"
           placeholder="Paste addresses separated by commas, spaces, or carriage returns."
         />
         <button
@@ -139,7 +139,7 @@ function App() {
         </button>
       </form>
       {error && (
-        <div className="flex w-[440px] flex-col gap-1">
+        <div className="flex w-[440px] max-w-full flex-col gap-1">
           <p className="font-bold text-slate-300">Eligibility check failed:</p>
           <p className="text-slate-300">{error}</p>
         </div>
@@ -182,7 +182,7 @@ function App() {
         </>
       )}
       <div className="flex-1"></div>
-      <div className="mt-8 mb-10 flex w-[440px] flex-col gap-2 text-sm">
+      <div className="mt-8 mb-10 flex w-[440px] max-w-full flex-col gap-2 text-sm">
         <p>
           This site was hacked together quickly by{" "}
           <a
