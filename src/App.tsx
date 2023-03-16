@@ -87,7 +87,6 @@ function App() {
       const promises = allAddresses.map(async (address) => {
         const res = await fetch(getCheckUrl(address));
         const json = (await res.json()) as eligibilityResponse;
-        console.log(json);
         return json.pageProps;
       });
       Promise.all(promises).then((results) => {
