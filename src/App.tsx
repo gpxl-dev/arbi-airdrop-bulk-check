@@ -168,17 +168,38 @@ function App() {
         </>
       )}
       <div className="flex-1"></div>
-      <div className="mb-10 w-[440px] text-sm">
-        This site was hacked together quickly by{" "}
-        <a
-          href="https://twitter.com/greypixel_"
-          className="cursor-pointer underline"
-          target="_blank"
-        >
-          greypixel
-        </a>
-        . It will probably break frequently, I'll try fix as quickly as
-        possible.
+      <div className="mb-10 flex w-[440px] flex-col gap-2 text-sm">
+        <p>
+          This site was hacked together quickly by{" "}
+          <a
+            href="https://twitter.com/greypixel_"
+            className="cursor-pointer underline"
+            target="_blank"
+          >
+            greypixel
+          </a>
+          . It will probably break frequently, I'll try to push fixes as quickly
+          as possible.
+        </p>
+        <p>
+          If you found this useful, please consider donating to
+          {/* copy on click */}
+          <button
+            className="font-mono"
+            onClick={(e) => {
+              try {
+                navigator.clipboard.writeText(
+                  "0xF0E146d9818C167FA0A67d711509d342DA845008"
+                );
+              } catch (e) {
+                // failed to copy
+              }
+            }}
+          >
+            0xF0E146d9818C167FA0A67d711509d342DA845008
+          </button>
+          . Any proceeds will go to Umami DAO's legal defense fund.
+        </p>
       </div>
     </div>
   );
