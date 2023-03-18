@@ -15,7 +15,7 @@ import { ImSpinner10 } from "react-icons/im";
 const getCheckUrl = (address: string) =>
   "https://corsproxy.io/?" +
   encodeURIComponent(
-    `https://arbitrum.foundation/_next/data/_auAIEL8IiofvSDCeL_BD/eligibility.json?address=${address.toLowerCase()}`
+    `https://arbitrum.foundation/_next/data/0g30GtLm-T_bTu6M_VM4K/eligibility.json?address=${address.toLowerCase()}`
   );
 
 type CheckResult = {
