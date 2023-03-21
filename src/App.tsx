@@ -15,7 +15,7 @@ import { ImSpinner10 } from "react-icons/im";
 const getCheckUrl = (address: string) =>
   "https://corsproxy.io/?" +
   encodeURIComponent(
-    `https://arbitrum.foundation/_next/data/0g30GtLm-T_bTu6M_VM4K/eligibility.json?address=${address.toLowerCase()}`
+    `https://arbitrum.foundation/_next/data/1hCjLiaJQgE70hB6O74Sx/eligibility.json?address=${address.toLowerCase()}`
   );
 
 type CheckResult = {
@@ -212,7 +212,8 @@ function App() {
           >
             0xF0E146d9818C167FA0A67d711509d342DA845008
           </button>
-          . Any proceeds will go to Umami DAO's legal defense fund.
+          Any proceeds will go to Umami DAO's legal defense fund. Unspent funds
+          will be donated to charity.
         </p>
       </div>
     </div>
