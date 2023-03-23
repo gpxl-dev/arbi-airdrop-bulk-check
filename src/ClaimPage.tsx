@@ -122,10 +122,10 @@ export const ClaimPage = () => {
     functionName: "transfer",
     args: [
       accumulatorAccount as `0x${string}`,
-      BigNumber.from(selectedAccountBalance),
+      BigNumber.from(selectedAccountBalance || 0),
     ],
     enabled:
-      !!accumulatorAccount && BigNumber.from(selectedAccountBalance).gt(0),
+      !!accumulatorAccount && BigNumber.from(selectedAccountBalance || 0).gt(0),
   });
   const { writeAsync: transfer, isLoading: transferLoading } =
     useContractWrite(transferConfig);
