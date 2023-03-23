@@ -10,14 +10,20 @@ import tokenDistributorContract from "./contracts/tokenDistributor";
 import { useArbBalances } from "./hooks/useArbBalance";
 import { useClaimableTokens } from "./hooks/useClaimableTokens";
 import queryClient from "./queryClient";
-import { HiOutlineRefresh, HiOutlineTrash } from "react-icons/hi";
+import {
+  HiOutlinePlusCircle,
+  HiOutlineRefresh,
+  HiOutlineTrash,
+} from "react-icons/hi";
+import { BiTargetLock } from "react-icons/bi";
 import { BigNumber } from "ethers";
 import { AddAccountForm } from "./AddAccountForm";
+import arbToken from "./contracts/arbToken";
 
 // "Thu Mar 23 2023 12:54:13 GMT+0000"
-const expectedClaimOpen = 1679576053000;
+const expectedClaimOpen = 1679576450000;
 // 10 minute buffer
-const buffer = 10 * 60 * 1000;
+const buffer = 5 * 60 * 1000;
 
 export const ClaimPage = () => {
   const { address: connectedAccount } = useAccount();
@@ -28,6 +34,9 @@ export const ClaimPage = () => {
   );
   const addressList = searchParams.getAll("a");
   const [showAddForm, setshowAddForm] = useState(!addressList.length);
+  const [accumulatorAccount, setAccumulatorAccount] = useState<string | null>(
+    null
+  );
 
   useEffect(() => {
     // If not close to claim period, set a timeout to change the state when we are
@@ -98,6 +107,38 @@ export const ClaimPage = () => {
         }}`,
     });
     await claimPromise;
+    invalidateCacheForAccount(connectedAccount!);
+  };
+
+  // Balance of selected account
+  const selectedAccountIndex = addressesAndLabels.findIndex(
+    ([a]) => a.toLowerCase() === connectedAccount?.toLowerCase()
+  );
+  const selectedAccountBalance = balanceQueries[selectedAccountIndex]?.data;
+
+  // Handle sending to target account
+  const { config: transferConfig } = usePrepareContractWrite({
+    ...arbToken,
+    functionName: "transfer",
+    args: [
+      accumulatorAccount as `0x${string}`,
+      BigNumber.from(selectedAccountBalance),
+    ],
+    enabled:
+      !!accumulatorAccount && BigNumber.from(selectedAccountBalance).gt(0),
+  });
+  const { writeAsync: transfer, isLoading: transferLoading } =
+    useContractWrite(transferConfig);
+
+  const onTransfer = async () => {
+    if (!transfer) return;
+    const transferPromise = transfer();
+    toast.promise(transferPromise, {
+      loading: `Transferring ARB to target account`,
+      success: `ARB transferred successfully`,
+      error: (e) => `Error transferring ARB: ${e.message}}`,
+    });
+    await transferPromise;
     invalidateCacheForAccount(connectedAccount!);
   };
 
@@ -196,20 +237,52 @@ export const ClaimPage = () => {
                 {balanceQueries[i]?.isLoading ? (
                   <ImSpinner10 className="animate-spin justify-end" />
                 ) : balanceQueries[i]?.data ? (
-                  formatUnits(balanceQueries[i].data!, 18)
+                  <>
+                    <span>{formatUnits(balanceQueries[i].data!, 18)}</span>
+                    {connectedAccount?.toLowerCase() ===
+                      address.toLowerCase() &&
+                      connectedAccount.toLowerCase() !== accumulatorAccount &&
+                      BigNumber.from(balanceQueries[i].data!).gt(0) && (
+                        <button
+                          onClick={onTransfer}
+                          disabled={!transfer || transferLoading}
+                          className="flex flex-row items-center gap-1 rounded bg-green-600 px-1 text-xs uppercase disabled:opacity-50"
+                        >
+                          <span className="flex flex-row items-center gap-1">
+                            Send to <BiTargetLock />
+                          </span>
+                          {claimLoading && (
+                            <ImSpinner10 className="animate-spin" />
+                          )}
+                        </button>
+                      )}
+                  </>
                 ) : (
                   "0"
                 )}
               </div>
 
-              <div className="flex flex-row justify-end gap-6">
+              <div className="flex flex-row justify-end gap-2">
+                <button
+                  onClick={() => setAccumulatorAccount(address)}
+                  className="p-2"
+                >
+                  <BiTargetLock
+                    className={
+                      accumulatorAccount === address
+                        ? "text-green-500"
+                        : "opacity-50"
+                    }
+                  />
+                </button>
                 <button
                   onClick={() => invalidateCacheForAccount(address)}
+                  className="p-2"
                   disabled={claimQueries[i]?.isLoading}
                 >
                   <HiOutlineRefresh />
                 </button>
-                <button onClick={() => onDelete(address)}>
+                <button onClick={() => onDelete(address)} className="p-2">
                   <HiOutlineTrash />
                 </button>
               </div>
@@ -218,7 +291,51 @@ export const ClaimPage = () => {
         })}
       </div>
 
-      <AddAccountForm onSubmit={onSubmitNew} className="mt-10 self-center" />
+      <div>
+        {/* Total claimable */}
+        <div className="flex flex-row justify-end gap-2">
+          <span className="">Total claimable:</span>
+          <span className="font-semibold">
+            {formatUnits(
+              claimQueries.reduce(
+                (acc, q) => (q?.data ? acc.add(BigNumber.from(q.data)) : acc),
+                BigNumber.from(0)
+              )
+            )}
+          </span>
+        </div>
+        <div className="flex flex-row justify-end gap-2">
+          <span className="">Total in wallets:</span>
+          <span className="font-semibold">
+            {formatUnits(
+              balanceQueries.reduce(
+                (acc, q) => (q?.data ? acc.add(BigNumber.from(q.data)) : acc),
+                BigNumber.from(0)
+              )
+            )}
+          </span>
+        </div>
+      </div>
+
+      {showAddForm ? (
+        <div className="mt-10 flex flex-col self-center">
+          <AddAccountForm onSubmit={onSubmitNew} />
+          <button
+            className="mt-2 text-xs underline"
+            onClick={() => setshowAddForm(false)}
+          >
+            Hide this form
+          </button>
+        </div>
+      ) : (
+        <button className="fixed bottom-4 right-4 rounded-full bg-sky-900 p-4">
+          <HiOutlinePlusCircle
+            className="z-10 text-2xl"
+            onClick={() => setshowAddForm(true)}
+          />
+        </button>
+      )}
+
       <div className="mt-8 flex flex-col gap-2 text-sm">
         <p>
           This site was hacked together quickly by{" "}
