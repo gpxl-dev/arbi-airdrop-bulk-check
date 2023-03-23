@@ -22,7 +22,7 @@ export const useClaimableTokens = (addresses: string[]) => {
       },
       enabled: !!address,
       refetchOnWindowFocus: false,
-      staleTime: Infinity, // 5 minutes
+      staleTime: 60 * 1000 * 60 * 24, // 1 day
       cacheTime: Infinity,
     })),
   });

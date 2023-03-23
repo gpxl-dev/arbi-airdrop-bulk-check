@@ -12,14 +12,13 @@ export const useArbBalances = (addresses: string[]) => {
     queries: addresses.map((address) => ({
       queryKey: [address.toLowerCase(), "arbBalance"],
       queryFn: async () => {
-        console.log("fetching", address);
         return (await contract
           .connect(provider)
           ["balanceOf"](address)) as BigNumber;
       },
       enabled: !!address,
-      refetchOnWindowFocus: false,
-      staleTime: Infinity, // 5 minutes
+      refetchOnWindowFocus: true,
+      staleTime: 5 * 60 * 1000, // 5 minutes
       cacheTime: Infinity,
     })),
   });

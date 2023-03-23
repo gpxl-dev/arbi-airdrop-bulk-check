@@ -101,6 +101,17 @@ export const ClaimPage = () => {
     invalidateCacheForAccount(connectedAccount!);
   };
 
+  const onDelete = (address: string) => {
+    // Remove address and label from search params
+    setSearchParams(
+      createSearchParams({
+        a: addressList.filter(
+          (a) => `0x${a.split(":")[0].toLowerCase()}` !== address.toLowerCase()
+        ),
+      })
+    );
+  };
+
   return (
     <div className="mx-auto box-border flex w-[800px] max-w-full flex-col gap-2 p-10">
       <div className="mb-5 self-end">
@@ -134,6 +145,10 @@ export const ClaimPage = () => {
         className="grid items-center gap-2"
         style={{ gridTemplateColumns: "repeat(4, auto)" }}
       >
+        <div className="text-xs">Address</div>
+        <div className="text-right text-xs">ARB claimable</div>
+        <div className="text-right text-xs">ARB in wallet</div>
+        <div></div>
         {addressesAndLabels.map(([address, label], i) => {
           return (
             <Fragment key={address}>
@@ -194,7 +209,7 @@ export const ClaimPage = () => {
                 >
                   <HiOutlineRefresh />
                 </button>
-                <button>
+                <button onClick={() => onDelete(address)}>
                   <HiOutlineTrash />
                 </button>
               </div>
@@ -215,7 +230,11 @@ export const ClaimPage = () => {
             greypixel
           </a>
           . The code is hosted{" "}
-          <a href="https://github.com/gpxl-dev/arbi-airdrop-bulk-check">
+          <a
+            href="https://github.com/gpxl-dev/arbi-airdrop-bulk-check"
+            target="_blank"
+            className="underline"
+          >
             on github
           </a>{" "}
           - feel free to submit a PR if you find any bugs or wish to add
@@ -238,8 +257,8 @@ export const ClaimPage = () => {
           >
             0xF0E146d9818C167FA0A67d711509d342DA845008
           </button>
-          Any proceeds will go to Umami DAO's legal defense fund. Unspent funds
-          will be donated to charity.
+          Any proceeds will go to the Umami DAO multisig's legal defense fund.
+          Unspent funds will be donated to charity.
         </p>
       </div>
       <Toaster />
