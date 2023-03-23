@@ -379,8 +379,6 @@ export const ClaimPage = () => {
           >
             0xF0E146d9818C167FA0A67d711509d342DA845008
           </button>
-          Any proceeds will go to the Umami DAO multisig's legal defense fund.
-          Unspent funds will be donated to charity.
         </p>
       </div>
       <Toaster />
