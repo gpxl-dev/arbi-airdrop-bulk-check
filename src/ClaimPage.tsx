@@ -96,7 +96,8 @@ export const ClaimPage = () => {
   const onClaim = async () => {
     if (!claim) return;
     const claimPromise = claim();
-    toast.promise(claimPromise, {
+    const claimComplete = claimPromise.then((tx) => tx.wait(3));
+    toast.promise(claimComplete, {
       loading: `Claiming ARB for ${truncateEthAddress(connectedAccount!)}`,
       success: `ARB claimed successfully for ${truncateEthAddress(
         connectedAccount!
@@ -106,7 +107,7 @@ export const ClaimPage = () => {
           e.message
         }}`,
     });
-    await claimPromise;
+    await claimComplete;
     invalidateCacheForAccount(connectedAccount!);
   };
 
@@ -133,13 +134,15 @@ export const ClaimPage = () => {
   const onTransfer = async () => {
     if (!transfer) return;
     const transferPromise = transfer();
-    toast.promise(transferPromise, {
+    const transferComplete = transferPromise.then((tx) => tx.wait(3));
+    toast.promise(transferComplete, {
       loading: `Transferring ARB to target account`,
       success: `ARB transferred successfully`,
       error: (e) => `Error transferring ARB: ${e.message}}`,
     });
-    await transferPromise;
+    await transferComplete;
     invalidateCacheForAccount(connectedAccount!);
+    invalidateCacheForAccount(accumulatorAccount!);
   };
 
   const onDelete = (address: string) => {
@@ -213,7 +216,7 @@ export const ClaimPage = () => {
                       </span>
                       {connectedAccount?.toLowerCase() ===
                         address.toLowerCase() &&
-                        BigNumber.from(claimQueries[i].data!).gt(0) && (
+                        BigNumber.from(claimQueries[i].data! || 0).gt(0) && (
                           <button
                             onClick={onClaim}
                             disabled={!claim || claimLoading}
@@ -242,7 +245,7 @@ export const ClaimPage = () => {
                     {connectedAccount?.toLowerCase() ===
                       address.toLowerCase() &&
                       connectedAccount.toLowerCase() !== accumulatorAccount &&
-                      BigNumber.from(balanceQueries[i].data!).gt(0) && (
+                      BigNumber.from(balanceQueries[i].data! || 0).gt(0) && (
                         <button
                           onClick={onTransfer}
                           disabled={!transfer || transferLoading}
@@ -298,7 +301,8 @@ export const ClaimPage = () => {
           <span className="font-semibold">
             {formatUnits(
               claimQueries.reduce(
-                (acc, q) => (q?.data ? acc.add(BigNumber.from(q.data)) : acc),
+                (acc, q) =>
+                  q?.data ? acc.add(BigNumber.from(q.data || 0)) : acc,
                 BigNumber.from(0)
               )
             )}
@@ -309,7 +313,8 @@ export const ClaimPage = () => {
           <span className="font-semibold">
             {formatUnits(
               balanceQueries.reduce(
-                (acc, q) => (q?.data ? acc.add(BigNumber.from(q.data)) : acc),
+                (acc, q) =>
+                  q?.data ? acc.add(BigNumber.from(q.data || 0)) : acc,
                 BigNumber.from(0)
               )
             )}
