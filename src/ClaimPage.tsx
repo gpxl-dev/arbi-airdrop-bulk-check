@@ -87,8 +87,8 @@ export const ClaimPage = () => {
   const { config } = usePrepareContractWrite({
     ...tokenDistributorContract,
     functionName: "claim",
-    staleTime: 10000,
-    enabled: closeToClaimPeriod,
+    staleTime: 5000,
+    enabled: true,
   });
   const { writeAsync: claim, isLoading: claimLoading } =
     useContractWrite(config);
