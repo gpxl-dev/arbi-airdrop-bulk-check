@@ -14,7 +14,7 @@ import ClaimCheckPage from "./ClaimCheckPage";
 import { ClaimPage } from "./ClaimPage";
 import queryClient from "./queryClient";
 
-const chains = [arbitrum, mainnet, polygon];
+const chains = [arbitrum];
 const projectId = "6c186b8fe36fd92c453e14617f4e3467";
 
 const { provider } = configureChains(chains, [w3mProvider({ projectId })]);
