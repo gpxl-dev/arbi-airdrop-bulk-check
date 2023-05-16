@@ -1,62 +1,12 @@
-import {
-  FormEvent,
-  FormEventHandler,
-  Fragment,
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
-import truncate from "truncate-eth-address";
+import { formatUnits } from "ethers/lib/utils.js";
+import { Fragment, useEffect, useMemo, useRef, useState } from "react";
 import { BsEyeFill, BsEyeSlashFill } from "react-icons/bs";
 import { ImSpinner10 } from "react-icons/im";
-import { Web3Button } from "@web3modal/react";
-
-const getCheckUrl = (address: string) =>
-  "https://corsproxy.io/?" +
-  encodeURIComponent(
-    `https://arbitrum.foundation/_next/data/3KvRSPBT4rWj7vxnzbN3A/eligibility.json?address=${address.toLowerCase()}`
-  );
-
-type CheckResult = {
-  isEligible: boolean;
-  isClaimingLive: boolean;
-  isSmartContractWallet: boolean;
-  hasClaimed: boolean;
-  eligibility: {
-    points: number;
-    tokens: number;
-    meets_criteria_2_1: number;
-    meets_criteria_2_2_a: number;
-    meets_criteria_2_2_b: number;
-    meets_criteria_2_2_c: number;
-    meets_criteria_2_3_a: number;
-    meets_criteria_2_3_b: number;
-    meets_criteria_2_3_c: number;
-    meets_criteria_2_3_d: number;
-    meets_criteria_2_4_a: number;
-    meets_criteria_2_4_b: number;
-    meets_criteria_2_4_c: number;
-    meets_criteria_2_6: number;
-    meets_criteria_2_7: number;
-    meets_criteria_2_8: number;
-    meets_criteria_4_1: number;
-    meets_criteria_4_2: number;
-    meets_criteria_4_3: number;
-    meets_criteria_11_1: number;
-    meets_criteria_11_2: number;
-    meets_criteria_11_3: number;
-    meets_criteria_11_4: number;
-  };
-};
-
-type eligibilityResponse = { pageProps: CheckResult };
+import truncate from "truncate-eth-address";
+import { useClaimableTokens } from "./hooks/useClaimableTokens";
 
 function ClaimCheckPage() {
   const [addresses, setAddresses] = useState<string>("");
-  const [loading, setLoading] = useState<boolean>(false);
-  const [error, setError] = useState<string | null>(null);
 
   const allAddresses = useMemo(() => {
     const matches = addresses.matchAll(/0x[a-z0-9]{40}/gim);
@@ -64,6 +14,8 @@ function ClaimCheckPage() {
     // remove duplicates, ignoring case
     return [...new Set(result.map((a) => a.toLowerCase()))];
   }, [addresses]);
+
+  const claimQueries = useClaimableTokens(allAddresses);
 
   const textArea = useRef<HTMLTextAreaElement>(null);
 
@@ -81,73 +33,26 @@ function ClaimCheckPage() {
     textAreaEl.addEventListener("paste", pasteListener);
   }, []);
 
-  const [result, setResult] = useState<CheckResult[] | null>(null);
-
   const [blur, setBlur] = useState<boolean>(false);
-
-  const fetchAirdropData = useCallback(
-    (e: FormEvent<HTMLFormElement>) => {
-      setLoading(true);
-      setError("");
-      setResult(null);
-      e.preventDefault();
-      const promises = allAddresses.map(async (address) => {
-        const res = await fetch(getCheckUrl(address));
-        const json = (await res.json()) as eligibilityResponse;
-        return json.pageProps;
-      });
-      Promise.all(promises)
-        .then((results) => {
-          setResult(results);
-          setLoading(false);
-        })
-        .catch((e) => {
-          setError(e.message);
-          setLoading(false);
-        });
-    },
-    [allAddresses]
-  );
 
   return (
     <div className="flex w-full flex-1 flex-col items-center px-4">
       <h1 className="mb-8 mt-8 text-2xl">
         Arbitrum airdrop bulk address checker
       </h1>
-      <form className="flex flex-col items-center" onSubmit={fetchAirdropData}>
-        <textarea
-          ref={textArea}
-          cols={42}
-          rows={10}
-          value={addresses}
-          onChange={(e) => setAddresses(e.target.value)}
-          className="mx-2 max-w-full rounded border border-sky-700 bg-sky-800 px-4 py-2 font-mono text-xs placeholder:text-slate-400 sm:text-base"
-          placeholder="Paste addresses separated by commas, spaces, or carriage returns."
-        />
-        <button
-          type="submit"
-          disabled={loading}
-          className="mt-4 mb-10 self-center rounded-sm bg-sky-800 py-1 px-3"
-        >
-          {loading ? (
-            <div className="flex flex-row items-center gap-2">
-              <span>Checking...</span>
-              <ImSpinner10 className="animate-spin" />
-            </div>
-          ) : (
-            "Check Airdrop Eligibility"
-          )}
-        </button>
-      </form>
-      {error && (
-        <div className="flex w-[440px] max-w-full flex-col gap-1">
-          <p className="font-bold text-slate-300">Eligibility check failed:</p>
-          <p className="text-slate-300">{error}</p>
-        </div>
-      )}
-      {result && (
+      <textarea
+        ref={textArea}
+        cols={42}
+        rows={10}
+        value={addresses}
+        onChange={(e) => setAddresses(e.target.value)}
+        className="mx-2 max-w-full rounded border border-sky-700 bg-sky-800 px-4 py-2 font-mono text-xs placeholder:text-slate-400 sm:text-base"
+        placeholder="Paste addresses separated by commas, spaces, or carriage returns."
+      />
+
+      {claimQueries && (
         <>
-          <div className="grid grid-cols-2">
+          <div className="mt-8 grid grid-cols-2">
             <div className="mb-4 flex flex-row items-center gap-2 text-left font-bold">
               Address
               <button
@@ -160,25 +65,21 @@ function ClaimCheckPage() {
             {/* <th>Points</th> */}
             <div className="text-right font-bold">Tokens</div>
 
-            {result.map((r: CheckResult, i) => (
+            {claimQueries.map(({ isLoading, data }, i) => (
               <Fragment key={i}>
                 <div className={"pr-10 font-mono " + (blur ? "blur-sm" : "")}>
                   {truncate(allAddresses[i])}
                 </div>
                 {/* <td>{r.eligibility.points}</td> */}
-                <div className="text-right">
-                  {r.eligibility.tokens.toLocaleString()}
-                </div>
+                {isLoading ? (
+                  <ImSpinner10 className="animate-spin" />
+                ) : (
+                  <div className="text-right">{formatUnits(data!, 18)}</div>
+                )}
               </Fragment>
             ))}
             {/* Table with headers in the first column: Total tokens, token price, market cap, FDV, airdrop value */}
             <div className="col-span-2 mt-4 h-px bg-sky-800"></div>
-            <div className="mt-4 font-bold">Total tokens</div>
-            <div className="mt-4 text-right font-bold">
-              {result
-                ?.reduce((acc, r) => acc + r.eligibility.tokens, 0)
-                .toLocaleString()}
-            </div>
           </div>
         </>
       )}
